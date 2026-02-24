@@ -24,6 +24,18 @@
                     <li class="nav-item me-3 text-white" id="dollar-indicator">
                         <small><i class="fas fa-spinner fa-spin"></i> Cargando Dólar...</small>
                     </li>
+
+                    <li class="nav-item me-3" id="user-session-display" style="display: none;">
+                        <span class="text-white me-2" id="username-display"></span>
+                        <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item me-3" id="login-btn-container">
+                        <button class="btn btn-outline-light btn-sm" onclick="openLoginModal()">
+                            <i class="fas fa-user"></i> Iniciar Sesión
+                        </button>
+                    </li>
                     
                     <li class="nav-item me-3">
                         <button class="btn btn-outline-light btn-sm" id="theme-toggle" onclick="toggleTheme()">
@@ -55,6 +67,29 @@
                 <a href="#productos" class="btn btn-primary btn-lg mt-3">Ver Productos</a>
             </div>
         </section>
+
+        <div class="container mb-5">
+            <div class="card p-4 shadow-sm">
+                <h4><i class="fas fa-truck"></i> Cotizar Despacho</h4>
+                <p class="text-muted">Consulta la disponibilidad en tu zona. (Requiere iniciar sesión)</p>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="shipping-location" placeholder="Ingresa tu Comuna (ej: Santiago, Viña del Mar)">
+                            <button class="btn btn-primary" type="button" onclick="checkShipping()">Consultar</button>
+                        </div>
+                        <div id="shipping-result" class="mt-2"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Últimas ubicaciones consultadas:</h6>
+                        <ul class="list-group list-group-flush small" id="locations-history">
+                            <li class="list-group-item text-muted">Inicia sesión para ver tu historial</li>
+                        </ul>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="clearHistory()" id="clear-history-btn" style="display:none;">Limpiar Historial</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="container">
             <div class="row justify-content-center mb-4">
@@ -105,7 +140,7 @@
                     <div class="mb-4">
                         <span class="product-price" id="detail-price">$0.00</span>
                         <br>
-                        <small class="text-muted" id="detail-price-usd">(Aprox $0 USD)</small>
+                        <small class="text-muted" id="detail-price-usd"></small>
                     </div>
                     
                     <p id="detail-description">Descripción del producto...</p>
@@ -173,6 +208,26 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir comprando</button>
                     <button type="button" class="btn btn-danger" id="clear-cart-btn">Vaciar</button>
                     <button type="button" class="btn btn-primary" id="checkout-btn">Pagar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Iniciar Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="username-input" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="username-input" placeholder="Ingresa tu nombre">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="login()">Ingresar</button>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-// Base de datos de productos (Mantenemos la data local por simplicidad, pero simularemos carga asíncrona)
+// Base de datos de productos
 const productsData = [
     { id: 1, name: 'Arduino UNO R3', price: 15990, category: 'arduino', image: 'https://i.pinimg.com/1200x/d9/44/5c/d9445cda32fcfdbb8c674becf26fcd7c.jpg', description: 'Placa Arduino UNO R3 original...', specs: ['ATmega328P', '5V', '14 pines I/O'] },
     { id: 2, name: 'Sensor Ultrasónico HC-SR04', price: 2990, category: 'sensores', image: 'https://i.pinimg.com/736x/ff/64/26/ff6426ed7697806f85a4cd99724b32de.jpg', description: 'Sensor de distancia...', specs: ['Rango: 2-400cm', '5V DC'] },
@@ -18,19 +18,23 @@ const PLACEHOLDER_IMG = 'https://dummyimage.com/300x300/cccccc/000000&text=No+Im
 let cart = [];
 let currentFilter = 'todos';
 let currentProduct = null;
-let dollarValue = null; // Almacenará el valor de la API
+let dollarValue = null;
+let currentUser = null; 
+let locationHistory = [];
 
 const toastLiveExample = document.getElementById('liveToast');
 
-// Event Listener con Arrow Function
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Cargar Dólar desde API (Async)
+    // 1. Cargar Dólar (Async)
     await fetchDollarValue();
 
-    // 2. Simular carga de productos
+    // 2. Verificar Sesión
+    checkSession();
+
+    // 3. Cargar productos
     displayProducts(productsData);
 
-    // Cargar tema
+    // Preferencias de tema
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
         document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
@@ -43,19 +47,149 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (checkoutBtn) checkoutBtn.addEventListener('click', checkout);
 });
 
-// --- INTEGRACIÓN API (ES6 Async/Await) ---
+// --- SESIÓN DE USUARIO (Re-integrado y modernizado a ES6) ---
+
+const checkSession = () => {
+    const savedUser = localStorage.getItem('activeUser');
+    if (savedUser) {
+        currentUser = savedUser;
+        updateUserInterface(true);
+        loadLocationHistory();
+    } else {
+        updateUserInterface(false);
+    }
+};
+
+const openLoginModal = () => {
+    const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+    modal.show();
+};
+
+const login = () => {
+    const usernameInput = document.getElementById('username-input').value.trim();
+    if (usernameInput) {
+        currentUser = usernameInput;
+        localStorage.setItem('activeUser', currentUser);
+        
+        const modalEl = document.getElementById('loginModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        updateUserInterface(true);
+        loadLocationHistory();
+        showToast(`Bienvenido, ${currentUser}`);
+    } else {
+        alert("Por favor ingresa un nombre.");
+    }
+};
+
+const logout = () => {
+    localStorage.removeItem('activeUser');
+    currentUser = null;
+    locationHistory = [];
+    updateUserInterface(false);
+    document.getElementById('locations-history').innerHTML = '<li class="list-group-item text-muted">Inicia sesión para ver tu historial</li>';
+    showToast("Sesión cerrada");
+};
+
+const updateUserInterface = (isLoggedIn) => {
+    const loginBtn = document.getElementById('login-btn-container');
+    const sessionDisplay = document.getElementById('user-session-display');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+    if (isLoggedIn) {
+        loginBtn.style.display = 'none';
+        sessionDisplay.style.display = 'flex';
+        document.getElementById('username-display').textContent = `Hola, ${currentUser}`;
+        if(clearHistoryBtn) clearHistoryBtn.style.display = 'block';
+    } else {
+        loginBtn.style.display = 'block';
+        sessionDisplay.style.display = 'none';
+        if(clearHistoryBtn) clearHistoryBtn.style.display = 'none';
+    }
+};
+
+// --- GESTIÓN DE LOCALIZACIONES (Re-integrado y modernizado) ---
+
+const checkShipping = () => {
+    if (!currentUser) {
+        alert("Debes iniciar sesión para cotizar y guardar tu historial.");
+        openLoginModal();
+        return;
+    }
+
+    const locationInput = document.getElementById('shipping-location');
+    const location = locationInput.value.trim();
+    const resultDiv = document.getElementById('shipping-result');
+
+    if (!location) return;
+
+    resultDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check"></i> Envíos disponibles a <strong>${location}</strong> desde $3.990.</div>`;
+
+    // ES6: Spread para agregar al inicio [nuevo, ...viejos]
+    locationHistory = [location, ...locationHistory];
+
+    // Limitar a 5
+    if (locationHistory.length > 5) {
+        locationHistory = locationHistory.slice(0, 5);
+    }
+
+    saveLocationHistory();
+    renderLocationHistory();
+    locationInput.value = '';
+};
+
+const saveLocationHistory = () => {
+    if (currentUser) {
+        localStorage.setItem(`history_${currentUser}`, JSON.stringify(locationHistory));
+    }
+};
+
+const loadLocationHistory = () => {
+    if (currentUser) {
+        const stored = localStorage.getItem(`history_${currentUser}`);
+        locationHistory = stored ? JSON.parse(stored) : [];
+        renderLocationHistory();
+    }
+};
+
+const renderLocationHistory = () => {
+    const list = document.getElementById('locations-history');
+    list.innerHTML = '';
+
+    if (locationHistory.length === 0) {
+        list.innerHTML = '<li class="list-group-item text-muted">Sin historial reciente.</li>';
+        return;
+    }
+
+    locationHistory.forEach(loc => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `<i class="fas fa-map-marker-alt text-danger me-2"></i> ${loc}`;
+        list.appendChild(li);
+    });
+};
+
+const clearHistory = () => {
+    if(confirm('¿Borrar historial de búsquedas?')) {
+        locationHistory = [];
+        saveLocationHistory();
+        renderLocationHistory();
+    }
+};
+
+// --- API FETCH (ES6) ---
 
 const fetchDollarValue = async () => {
     try {
         const response = await fetch('https://mindicador.cl/api/dolar');
         const data = await response.json();
         
-        // Destructuring anidado para obtener el valor
         const { serie } = data;
         if (serie && serie.length > 0) {
             dollarValue = serie[0].valor;
             const dollarEl = document.getElementById('dollar-indicator');
-            dollarEl.innerHTML = `<i class="fas fa-money-bill-wave"></i> Dólar: $${dollarValue} CLP`;
+            dollarEl.innerHTML = `<small><i class="fas fa-money-bill-wave"></i> Dólar: $${dollarValue} CLP</small>`;
         }
     } catch (error) {
         console.error("Error fetching API:", error);
@@ -63,15 +197,13 @@ const fetchDollarValue = async () => {
     }
 };
 
-// --- FUNCIONES VISUALES (ES6 Arrow Functions) ---
+// --- VISUALES (ES6) ---
 
 const toggleTheme = () => {
     const body = document.body;
     const icon = document.getElementById('theme-icon');
-
     body.classList.toggle('dark-mode');
     const isDark = body.classList.contains('dark-mode');
-
     icon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 };
@@ -83,9 +215,8 @@ const showToast = (message) => {
     toast.show();
 };
 
-// --- LÓGICA DE PRODUCTOS ---
+// --- PRODUCTOS (ES6) ---
 
-// Uso de parámetros por defecto y Arrow Function
 const displayProducts = (productsToShow = []) => {
     const container = document.getElementById('products-container');
     container.innerHTML = '';
@@ -95,13 +226,11 @@ const displayProducts = (productsToShow = []) => {
         return;
     }
 
-    // Uso de Destructuring en el argumento del map/forEach
     productsToShow.forEach(({ id, name, price, image }) => {
         const col = document.createElement('div');
         col.className = 'col-md-6 col-lg-3';
         const imgSrc = image || PLACEHOLDER_IMG;
 
-        // Template Literals (``)
         col.innerHTML = `
             <div class="card product-card h-100">
                 <div class="product-img">
@@ -127,7 +256,6 @@ const displayProducts = (productsToShow = []) => {
 
 const searchProducts = () => {
     const query = document.getElementById('search-input').value.toLowerCase();
-    // Uso de filter con return implícito
     const filtered = productsData.filter(p => 
         p.name.toLowerCase().includes(query) || 
         p.category.toLowerCase().includes(query)
@@ -137,8 +265,6 @@ const searchProducts = () => {
 
 const filterCategory = (category) => {
     currentFilter = category;
-    
-    // Spread operator para convertir NodeList a Array (opcional, pero buena práctica ES6)
     [...document.querySelectorAll('.category-btn')].forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
 
@@ -150,11 +276,10 @@ const filterCategory = (category) => {
     document.getElementById('search-input').value = '';
 };
 
-// --- LÓGICA DE DETALLE Y CARRITO ---
+// --- DETALLE Y CARRITO (ES6) ---
 
 const addToCart = (productId) => {
     const product = productsData.find(p => p.id === productId);
-    // Spread operator para inmutabilidad (crear nuevo arreglo en vez de mutar)
     cart = [...cart, product];
     updateCartCount();
     showToast(`${product.name} agregado al carrito`);
@@ -168,17 +293,19 @@ const updateCartCount = () => {
 
 const showProductDetail = (productId) => {
     currentProduct = productsData.find(p => p.id === productId);
-    const { name, price, description, specs, image } = currentProduct; // Destructuring
+    const { name, price, description, specs, image } = currentProduct;
     const imgSrc = image || PLACEHOLDER_IMG;
 
     document.getElementById('detail-img').innerHTML = `<img src="${imgSrc}" alt="${name}" class="img-fluid detail-img-el">`;
     document.getElementById('detail-title').textContent = name;
     document.getElementById('detail-price').textContent = `$${price.toLocaleString('es-CL')}`;
     
-    // Conversión a Dólar si la API funcionó
+    // Mostrar conversión si hay valor de dólar
     if (dollarValue) {
         const usdPrice = (price / dollarValue).toFixed(2);
         document.getElementById('detail-price-usd').textContent = `(Aprox $${usdPrice} USD)`;
+    } else {
+        document.getElementById('detail-price-usd').textContent = '';
     }
 
     document.getElementById('detail-description').textContent = description;
@@ -206,16 +333,12 @@ const showHome = () => {
 const addToCartFromDetail = () => {
     const quantity = parseInt(document.getElementById('detail-quantity').value);
     if (quantity > 0) {
-        // Crear un array de 'n' elementos y llenarlo con el producto, luego spread al carrito
         const newItems = Array(quantity).fill(currentProduct);
         cart = [...cart, ...newItems];
-        
         updateCartCount();
         showToast(`${quantity} unidades agregadas al carrito`);
     }
 };
-
-// --- MODAL DEL CARRITO ---
 
 const openCartModal = () => {
     const modalEl = document.getElementById('cartModal');
@@ -239,7 +362,6 @@ const renderCart = () => {
 
     emptyEl.style.display = 'none';
 
-    // Agrupar items
     const map = {};
     cart.forEach(p => {
         if (!map[p.id]) map[p.id] = { product: p, qty: 0 };
@@ -247,7 +369,7 @@ const renderCart = () => {
     });
 
     let total = 0;
-    Object.values(map).forEach(({ product, qty }) => { // Destructuring en el loop
+    Object.values(map).forEach(({ product, qty }) => {
         const { id, name, price, image } = product;
         total += price * qty;
 
@@ -279,7 +401,6 @@ const renderCart = () => {
 const removeOne = (productId) => {
     const idx = cart.findIndex(p => p.id === productId);
     if (idx !== -1) {
-        // Splice muta el array, es aceptable, pero en React/Redux usaríamos filter
         cart.splice(idx, 1);
         updateCartCount();
         renderCart();
