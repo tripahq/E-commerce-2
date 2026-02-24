@@ -1,4 +1,4 @@
-// Base de datos de productos (Misma data, comprimida para lectura)
+// Base de datos de productos (Misma data)
 const products = [
     { id: 1, name: 'Arduino UNO R3', price: 15990, category: 'arduino', image: 'https://i.pinimg.com/1200x/d9/44/5c/d9445cda32fcfdbb8c674becf26fcd7c.jpg', description: 'Placa Arduino UNO R3 original...', specs: ['ATmega328P', '5V', '14 pines I/O'] },
     { id: 2, name: 'Sensor Ultrasónico HC-SR04', price: 2990, category: 'sensores', image: 'https://i.pinimg.com/736x/ff/64/26/ff6426ed7697806f85a4cd99724b32de.jpg', description: 'Sensor de distancia...', specs: ['Rango: 2-400cm', '5V DC'] },
@@ -18,10 +18,14 @@ const PLACEHOLDER_IMG = 'https://dummyimage.com/300x300/cccccc/000000&text=No+Im
 let cart = [];
 let currentFilter = 'todos';
 let currentProduct = null;
+let currentUser = null; // Variable para sesión
+let locationHistory = []; // Arreglo para almacenar localizaciones
+
 const toastLiveExample = document.getElementById('liveToast');
 
 document.addEventListener('DOMContentLoaded', function () {
     displayProducts(products);
+    checkSession(); // Verificar si hay usuario logueado al inicio
 
     // Cargar preferencia de modo oscuro
     if (localStorage.getItem('theme') === 'dark') {
@@ -36,9 +40,147 @@ document.addEventListener('DOMContentLoaded', function () {
     if (checkoutBtn) checkoutBtn.addEventListener('click', checkout);
 });
 
-// --- FUNCIONES VISUALES ---
+// --- GESTIÓN DE SESIONES Y LOCALIZACIONES ---
 
-// Alternar Modo Oscuro
+function checkSession() {
+    const savedUser = localStorage.getItem('activeUser');
+    if (savedUser) {
+        currentUser = savedUser;
+        updateUserInterface(true);
+        loadLocationHistory();
+    } else {
+        updateUserInterface(false);
+    }
+}
+
+function openLoginModal() {
+    const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+    modal.show();
+}
+
+function login() {
+    const usernameInput = document.getElementById('username-input').value.trim();
+    if (usernameInput) {
+        currentUser = usernameInput;
+        localStorage.setItem('activeUser', currentUser);
+        
+        // Cerrar modal
+        const modalEl = document.getElementById('loginModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        updateUserInterface(true);
+        loadLocationHistory();
+        showToast(`Bienvenido, ${currentUser}`);
+    } else {
+        alert("Por favor ingresa un nombre.");
+    }
+}
+
+function logout() {
+    localStorage.removeItem('activeUser');
+    currentUser = null;
+    locationHistory = []; // Limpiar arreglo en memoria
+    updateUserInterface(false);
+    document.getElementById('locations-history').innerHTML = '<li class="list-group-item text-muted">Inicia sesión para ver tu historial</li>';
+    showToast("Sesión cerrada");
+}
+
+function updateUserInterface(isLoggedIn) {
+    const loginBtn = document.getElementById('login-btn-container');
+    const sessionDisplay = document.getElementById('user-session-display');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+    if (isLoggedIn) {
+        loginBtn.style.display = 'none';
+        sessionDisplay.style.display = 'flex';
+        document.getElementById('username-display').textContent = `Hola, ${currentUser}`;
+        clearHistoryBtn.style.display = 'block';
+    } else {
+        loginBtn.style.display = 'block';
+        sessionDisplay.style.display = 'none';
+        clearHistoryBtn.style.display = 'none';
+    }
+}
+
+// Lógica de "Localizaciones" (Envío)
+function checkShipping() {
+    if (!currentUser) {
+        alert("Debes iniciar sesión para cotizar y guardar tu historial.");
+        openLoginModal();
+        return;
+    }
+
+    const locationInput = document.getElementById('shipping-location');
+    const location = locationInput.value.trim();
+    const resultDiv = document.getElementById('shipping-result');
+
+    if (!location) return;
+
+    // Simulación de respuesta
+    resultDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check"></i> Envíos disponibles a <strong>${location}</strong> desde $3.990.</div>`;
+
+    // Uso de Arreglos: Agregar al inicio (unshift)
+    // Evitar duplicados consecutivos opcionalmente, pero aquí guardaremos todo el historial
+    locationHistory.unshift(location);
+
+    // Limitar historial a las últimas 5
+    if (locationHistory.length > 5) {
+        locationHistory.pop();
+    }
+
+    saveLocationHistory();
+    renderLocationHistory();
+    locationInput.value = ''; // Limpiar input
+}
+
+function saveLocationHistory() {
+    if (currentUser) {
+        // Clave única por usuario para distinguir sesiones
+        localStorage.setItem(`history_${currentUser}`, JSON.stringify(locationHistory));
+    }
+}
+
+function loadLocationHistory() {
+    if (currentUser) {
+        const stored = localStorage.getItem(`history_${currentUser}`);
+        if (stored) {
+            locationHistory = JSON.parse(stored);
+            renderLocationHistory();
+        } else {
+            locationHistory = [];
+            renderLocationHistory();
+        }
+    }
+}
+
+function renderLocationHistory() {
+    const list = document.getElementById('locations-history');
+    list.innerHTML = '';
+
+    if (locationHistory.length === 0) {
+        list.innerHTML = '<li class="list-group-item text-muted">Sin historial reciente.</li>';
+        return;
+    }
+
+    locationHistory.forEach(loc => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `<i class="fas fa-map-marker-alt text-danger me-2"></i> ${loc}`;
+        list.appendChild(li);
+    });
+}
+
+function clearHistory() {
+    if(confirm('¿Borrar historial de búsquedas?')) {
+        locationHistory = [];
+        saveLocationHistory();
+        renderLocationHistory();
+    }
+}
+
+// --- FUNCIONES VISUALES EXISTENTES ---
+
 function toggleTheme() {
     const body = document.body;
     const icon = document.getElementById('theme-icon');
@@ -54,7 +196,6 @@ function toggleTheme() {
     }
 }
 
-// Mostrar Toast (Mejor que alert)
 function showToast(message) {
     const toastBody = document.getElementById('toast-message');
     toastBody.textContent = message;
@@ -62,7 +203,7 @@ function showToast(message) {
     toast.show();
 }
 
-// --- LÓGICA DE PRODUCTOS ---
+// --- LÓGICA DE PRODUCTOS EXISTENTE ---
 
 function displayProducts(productsToShow) {
     const container = document.getElementById('products-container');
@@ -75,7 +216,7 @@ function displayProducts(productsToShow) {
 
     productsToShow.forEach(product => {
         const col = document.createElement('div');
-        col.className = 'col-md-6 col-lg-3'; // Ajuste responsive
+        col.className = 'col-md-6 col-lg-3';
         const imgSrc = product.image || PLACEHOLDER_IMG;
 
         col.innerHTML = `
@@ -101,7 +242,6 @@ function displayProducts(productsToShow) {
     });
 }
 
-// Buscador
 function searchProducts() {
     const query = document.getElementById('search-input').value.toLowerCase();
     const filtered = products.filter(p =>
@@ -113,10 +253,8 @@ function searchProducts() {
 
 function filterCategory(category) {
     currentFilter = category;
-
-    // Actualizar botones activos visualmente
     document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active'); // Nota: esto asume que el click viene del botón
+    event.target.classList.add('active');
 
     if (category === 'todos') {
         displayProducts(products);
@@ -124,11 +262,8 @@ function filterCategory(category) {
         const filtered = products.filter(p => p.category === category);
         displayProducts(filtered);
     }
-    // Limpiar búsqueda al cambiar categoría
     document.getElementById('search-input').value = '';
 }
-
-// --- LÓGICA DE DETALLE Y CARRITO ---
 
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
@@ -140,9 +275,7 @@ function addToCart(productId) {
 function updateCartCount() {
     const countEl = document.getElementById('cart-count');
     countEl.textContent = cart.length;
-
-    // Animación pequeña al cambiar número
-    countEl.classList.add('animate__bounceIn'); // Requiere animate.css o similar, o simple CSS
+    countEl.classList.add('animate__bounceIn');
 }
 
 function showProductDetail(productId) {
@@ -158,7 +291,7 @@ function showProductDetail(productId) {
     specsList.innerHTML = '';
     currentProduct.specs.forEach(spec => {
         const li = document.createElement('li');
-        li.className = 'list-group-item'; // Estilo Bootstrap para listas
+        li.className = 'list-group-item';
         li.innerHTML = `<i class="fas fa-check text-success me-2"></i> ${spec}`;
         specsList.appendChild(li);
     });
@@ -184,8 +317,6 @@ function addToCartFromDetail() {
         showToast(`${quantity} unidades agregadas al carrito`);
     }
 }
-
-// --- MODAL DEL CARRITO ---
 
 function openCartModal() {
     const modalEl = document.getElementById('cartModal');
@@ -278,10 +409,9 @@ function checkout() {
     cart = [];
     updateCartCount();
     renderCart();
-    // Cerrar modal manualmente si es necesario
     const modalEl = document.getElementById('cartModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
 
     showToast('¡Compra realizada con éxito!');
-} 
+}
