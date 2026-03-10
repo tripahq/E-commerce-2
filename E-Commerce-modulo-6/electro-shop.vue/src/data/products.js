@@ -1,0 +1,15 @@
+// Agregamos "export" para que Vue pueda leer este arreglo desde otros archivos
+export const productsData = [
+    { id: 1, name: 'Arduino UNO R3', price: 15990, category: 'arduino', image: 'https://i.pinimg.com/1200x/d9/44/5c/d9445cda32fcfdbb8c674becf26fcd7c.jpg', description: 'Placa Arduino UNO R3 original...', specs: ['ATmega328P', '5V', '14 pines I/O'] },
+    { id: 2, name: 'Sensor Ultrasónico HC-SR04', price: 2990, category: 'sensores', image: 'https://i.pinimg.com/736x/ff/64/26/ff6426ed7697806f85a4cd99724b32de.jpg', description: 'Sensor de distancia...', specs: ['Rango: 2-400cm', '5V DC'] },
+    { id: 3, name: 'Resistencia 220Ω (Pack 100)', price: 990, category: 'resistencias', image: 'https://res.cloudinary.com/rsc/image/upload/b_rgb:FFFFFF,c_pad,dpr_1.0,f_auto,q_auto,w_700/c_pad,w_700/F0131794-01', description: 'Pack resistencias...', specs: ['220Ω', '1/4W'] },
+    { id: 4, name: 'Potenciómetro 10KΩ', price: 890, category: 'componentes', image: 'https://triacs.cl/3098-superlarge_default_2x/modulo-potenciometro-10k.jpg', description: 'Potenciómetro lineal...', specs: ['10KΩ', 'Lineal'] },
+    { id: 5, name: 'Fotoresistor LDR 5mm', price: 490, category: 'sensores', image: 'https://monarcatech.com/cdn/shop/articles/33_1626f6a3-9d5a-4e17-bc0e-5610ce7ed448.jpg?v=1694204031&width=1100', description: 'Sensor de luz...', specs: ['LDR 5mm'] },
+    { id: 6, name: 'Sensor DHT11', price: 3490, category: 'sensores', image: 'https://mcielectronics.cl/wp-content/uploads/2024/08/qqq.png', description: 'Temp y Humedad...', specs: ['0-50°C', '20-90%'] },
+    { id: 7, name: 'Arduino Nano', price: 8990, category: 'arduino', image: 'https://botland.store/img/art/inne/24792_2.jpg', description: 'Compacto...', specs: ['ATmega328', 'Mini USB'] },
+    { id: 8, name: 'Protoboard 830', price: 2490, category: 'componentes', image: 'https://http2.mlstatic.com/D_NQ_NP_692622-MLC31210796996_062019-O-protoboard-830-puntos-modelo-mb102-arduino-pic-max-.webp', description: 'Protoboard...', specs: ['830 puntos'] },
+    { id: 9, name: 'Sensor PIR', price: 2790, category: 'sensores', image: 'https://www.mechatronicstore.cl/wp-content/uploads/2015/08/2.jpg', description: 'Movimiento...', specs: ['Infrarrojo'] },
+    { id: 10, name: 'Resistencia Var 1K', price: 1290, category: 'resistencias', image: 'https://res.cloudinary.com/rsc/image/upload/b_rgb:FFFFFF,c_pad,dpr_1.0,f_auto,q_auto,w_700/c_pad,w_700/F1542397-01', description: 'Trimpot...', specs: ['1K', 'Multivuelta'] },
+    { id: 11, name: 'Kit Arduino Starter', price: 32990, category: 'arduino', image: 'https://arduino.cl/wp-content/uploads/2019/09/Arduino-Starter-Kit-en-Espanol-3.webp', description: 'Kit inicio...', specs: ['UNO R3', 'Cables', 'Sensores'] },
+    { id: 12, name: 'Resistencia 10K (Pack 50)', price: 690, category: 'resistencias', image: 'https://http2.mlstatic.com/D_NQ_NP_2X_658424-MLC74613805017_022024-T-10x-pack-resistencia-14-watt-025-watts-10000-ohm-10k.webp', description: 'Pack 10K...', specs: ['10KΩ', '1/4W'] }
+];

@@ -1,0 +1,161 @@
+/* Variables para colores (Tema Claro por defecto) */
+:root {
+    --bg-body: #f8f9fa;
+    --bg-card: #ffffff;
+    --text-color: #212529;
+    --primary-color: #0d6efd;
+    --border-color: #dee2e6;
+    --navbar-bg: #212529;
+}
+
+/* Tema Oscuro (Se activa con la clase .dark-mode) */
+body.dark-mode {
+    --bg-body: #121212;
+    --bg-card: #1e1e1e;
+    --text-color: #e0e0e0;
+    --primary-color: #375a7f;
+    /* Un azul más suave */
+    --border-color: #444;
+    --navbar-bg: #000000;
+}
+
+/* Aplicación de variables generales */
+body {
+    background-color: var(--bg-body);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--navbar-bg) !important;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 100px 0;
+    margin-bottom: 30px;
+    border-radius: 0 0 20px 20px;
+}
+
+/* Filtros */
+.category-filter {
+    margin-bottom: 30px;
+}
+
+.category-btn {
+    margin: 5px;
+    border-radius: 20px;
+}
+
+/* Tarjetas de Productos (Cards) */
+.product-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    /* Efecto de elevación */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    /* Sombra suave */
+}
+
+/* Imágenes en las tarjetas */
+.product-img {
+    height: 200px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    /* Siempre blanco para ver bien el componente */
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.product-card-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+
+.product-card:hover .product-card-img {
+    transform: scale(1.05);
+    /* Zoom suave a la imagen */
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    height: 50px;
+    /* Altura fija para alinear */
+    overflow: hidden;
+}
+
+.product-price {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Página de Detalle */
+.product-detail-img {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.detail-img-el {
+    max-height: 400px;
+}
+
+.badge-stock {
+    background-color: #198754;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+/* Footer */
+footer {
+    background-color: var(--navbar-bg);
+    color: white;
+    padding: 40px 0 20px;
+    margin-top: 50px;
+}
+
+footer a {
+    color: #ccc;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: white;
+}
+
+/* Modal Carrito */
+.modal-content {
+    background-color: var(--bg-card);
+    color: var(--text-color);
+}
+
+.list-group-item {
+    background-color: var(--bg-card);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
