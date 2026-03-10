@@ -1,8 +1,10 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router' // <-- Esto conecta las rutas
+import router from './router'
+import { checkSession } from './store'
 
 const app = createApp(App)
 
-app.use(router) // <-- Le decimos a Vue que use el enrutador
+checkSession()
+app.use(router)
 app.mount('#app')

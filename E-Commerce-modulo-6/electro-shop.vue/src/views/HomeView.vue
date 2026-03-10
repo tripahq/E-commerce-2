@@ -1,31 +1,28 @@
 <template>
   <div>
-    <section class="hero-section text-center">
+    <section class="hero-section text-center py-5 bg-dark text-white">
       <div class="container">
-        <h1 class="display-4 fw-bold">Electronic</h1>
-        <p class="lead">Todo lo que necesitas para tus proyectos de electrónica y Arduino</p>
+        <h1 v-if="currentUser" class="display-4 fw-bold animate__animated animate__fadeIn">
+          ¡Hola, {{ currentUser }}!
+        </h1>
+        <h1 v-else class="display-4 fw-bold">Electronic Shop</h1>
+        
+        <p v-if="lastVisitCity" class="lead">
+          <i class="fas fa-map-marker-alt text-danger"></i> 
+          Viendo ofertas para el despacho a: <strong>{{ lastVisitCity }}</strong>
+        </p>
+        <p v-else class="lead">Los mejores componentes para tus proyectos de Arduino</p>
       </div>
     </section>
 
-    <div class="container mb-5">
+    <div class="container mt-4">
       <ShippingCalculator />
     </div>
 
-    <div class="container mb-4 text-center">
-       <input type="text" v-model="searchQuery" class="form-control mb-3 w-50 mx-auto" placeholder="Buscar componente...">
-       <div class="category-filter">
-          <button v-for="cat in categories" :key="cat" 
-                  @click="currentCategory = cat"
-                  :class="['btn btn-outline-primary category-btn', { active: currentCategory === cat }]">
-            {{ cat.toUpperCase() }}
-          </button>
-       </div>
-    </div>
-
-    <section class="container pb-5">
+    <section class="container py-5">
       <div class="row g-4">
-        <div class="col-md-6 col-lg-3" v-for="item in filteredProducts" :key="item.id">
-          <ProductCard :product="item" @add-to-cart="handleAddToCart" />
+        <div class="col-md-6 col-lg-3" v-for="item in productsData" :key="item.id">
+          <ProductCard :product="item" />
         </div>
       </div>
     </section>
@@ -33,29 +30,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import ProductCard from '../components/ProductCard.vue';
-import ShippingCalculator from '../components/ShippingCalculator.vue'; // <-- ¡Lo importamos!
+import { currentUser, lastVisitCity } from '../store.js';
 import { productsData } from '../data/products.js';
-import { addToCart } from '../store.js';
-
-const searchQuery = ref('');
-const currentCategory = ref('todos');
-const categories = ['todos', 'sensores', 'resistencias', 'arduino', 'componentes'];
-
-const filteredProducts = computed(() => {
-  if (!productsData) return []; 
-  let filtered = productsData;
-  if (currentCategory.value !== 'todos') {
-    filtered = filtered.filter(p => p.category === currentCategory.value);
-  }
-  if (searchQuery.value) {
-    filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
-  }
-  return filtered;
-});
-
-const handleAddToCart = (itemToCart, qty) => {
-  addToCart(itemToCart, qty);
-};
+import ProductCard from '../components/ProductCard.vue';
+import ShippingCalculator from '../components/ShippingCalculator.vue';
 </script>
